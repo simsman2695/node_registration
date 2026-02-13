@@ -1,0 +1,35 @@
+{
+  "name": "@cpedge/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "db:migrate": "tsx node_modules/knex/bin/cli.js migrate:latest --knexfile knexfile.ts",
+    "db:rollback": "tsx node_modules/knex/bin/cli.js migrate:rollback --knexfile knexfile.ts",
+    "db:seed": "tsx node_modules/knex/bin/cli.js seed:run --knexfile knexfile.ts"
+  },
+  "dependencies": {
+    "connect-redis": "^8.0.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.7",
+    "express-session": "^1.18.1",
+    "ioredis": "^5.4.2",
+    "knex": "^3.1.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.13.1",
+    "restify": "^11.1.0",
+    "restify-errors": "^8.0.2"
+  },
+  "devDependencies": {
+    "@types/express-session": "^1.18.1",
+    "@types/node": "^22.10.5",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "@types/restify": "^8.5.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

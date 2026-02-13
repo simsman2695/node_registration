@@ -1,0 +1,16 @@
+[Unit]
+Description=Node Registration Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/node-registration-agent
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=10
+EnvironmentFile=/opt/node-registration-agent/.env
+
+[Install]
+WantedBy=multi-user.target

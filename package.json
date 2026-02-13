@@ -1,0 +1,19 @@
+{
+  "name": "node-registration",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:api": "pnpm --filter @cpedge/api dev",
+    "dev:web": "pnpm --filter @cpedge/web dev",
+    "dev:agent": "pnpm --filter @cpedge/agent dev",
+    "db:migrate": "pnpm --filter @cpedge/api db:migrate",
+    "db:rollback": "pnpm --filter @cpedge/api db:rollback",
+    "db:seed": "pnpm --filter @cpedge/api db:seed",
+    "docker:up": "docker compose -f infra/docker-compose.yml up -d postgres redis && pnpm db:migrate && pnpm db:seed",
+    "docker:down": "docker compose -f infra/docker-compose.yml down"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
+}
