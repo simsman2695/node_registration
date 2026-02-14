@@ -3,6 +3,7 @@
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "@/lib/theme";
+import UpdateBanner from "@/components/UpdateBanner";
 
 export default function RootLayout({
   children,
@@ -21,16 +22,8 @@ export default function RootLayout({
         <ThemeProvider theme={theme}>
           <CssBaseline />
           {children}
+          <UpdateBanner />
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js');
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@ import { Server, Request, Response } from "restify";
 import db from "../db";
 import redis from "../redis";
 import { requireApiKey } from "../middleware/api-key";
+import { logAudit } from "../audit";
 import type { PaginatedResponse, Node } from "../types";
 
 const CACHE_TTL = 30; // seconds
@@ -35,7 +36,7 @@ export function registerNodeRoutes(server: Server): void {
     if (existing) {
       const [node] = await db("nodes")
         .where({ mac_address: mac })
-        .update({ hostname, internal_ip, public_ip, last_seen: now, updated_at: now })
+        .update({ hostname, internal_ip, public_ip, is_hidden: false, last_seen: now, updated_at: now })
         .returning("*");
       await invalidateCache();
       res.send(200, node);
@@ -67,8 +68,8 @@ export function registerNodeRoutes(server: Server): void {
       return;
     }
 
-    let query = db("nodes");
-    let countQuery = db("nodes");
+    let query = db("nodes").where({ is_hidden: false });
+    let countQuery = db("nodes").where({ is_hidden: false });
 
     if (search) {
       const searchPattern = `%${search}%`;
@@ -76,10 +77,11 @@ export function registerNodeRoutes(server: Server): void {
         this.where("hostname", "ilike", searchPattern)
           .orWhere("mac_address", "ilike", searchPattern)
           .orWhere("internal_ip", "ilike", searchPattern)
-          .orWhere("public_ip", "ilike", searchPattern);
+          .orWhere("public_ip", "ilike", searchPattern)
+          .orWhereRaw("metadata::text ilike ?", [searchPattern]);
       };
-      query = query.where(whereClause);
-      countQuery = countQuery.where(whereClause);
+      query = query.andWhere(whereClause);
+      countQuery = countQuery.andWhere(whereClause);
     }
 
     const [{ count }] = await countQuery.count("* as count");
@@ -107,15 +109,63 @@ export function registerNodeRoutes(server: Server): void {
     res.send(200, node);
   });
 
-  // DELETE /api/nodes/:mac - Remove node (will reappear on next agent check-in)
-  server.del("/api/nodes/:mac", requireApiKey, async (req: Request, res: Response) => {
+  // PATCH /api/nodes/:mac/metadata - Update node metadata
+  server.patch("/api/nodes/:mac/metadata", requireApiKey, async (req: Request, res: Response) => {
     const mac = req.params.mac?.toUpperCase();
-    const deleted = await db("nodes").where({ mac_address: mac }).del();
+    const { metadata } = req.body || {};
 
-    if (!deleted) {
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+      res.send(400, { error: "Body must contain metadata object" });
+      return;
+    }
+
+    const node = await db("nodes").where({ mac_address: mac }).first();
+    if (!node) {
       res.send(404, { error: "Node not found" });
       return;
     }
+
+    const now = new Date();
+    const [updated] = await db("nodes")
+      .where({ mac_address: mac })
+      .update({ metadata: JSON.stringify(metadata), updated_at: now })
+      .returning("*");
+
+    const user = (req as any).user;
+    logAudit({
+      user_id: user?.id,
+      user_email: user?.email,
+      action: "update_metadata",
+      target_mac: mac,
+      target_hostname: node.hostname,
+      meta: { metadata },
+    });
+
+    await invalidateCache();
+    res.send(200, updated);
+  });
+
+  // DELETE /api/nodes/:mac - Remove node (will reappear on next agent check-in)
+  server.del("/api/nodes/:mac", requireApiKey, async (req: Request, res: Response) => {
+    const mac = req.params.mac?.toUpperCase();
+    const node = await db("nodes").where({ mac_address: mac }).first();
+
+    if (!node) {
+      res.send(404, { error: "Node not found" });
+      return;
+    }
+
+    await db("nodes").where({ mac_address: mac }).update({ is_hidden: true, updated_at: new Date() });
+
+    const user = (req as any).user;
+    logAudit({
+      user_id: user?.id,
+      user_email: user?.email,
+      action: "delete_node",
+      target_mac: mac,
+      target_hostname: node.hostname,
+      meta: { internal_ip: node.internal_ip, public_ip: node.public_ip },
+    });
 
     await invalidateCache();
     res.send(204);

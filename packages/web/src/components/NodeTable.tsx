@@ -6,6 +6,7 @@ import {
   Box,
   Card,
   CardContent,
+  Chip,
   IconButton,
   List,
   ListItem,
@@ -17,6 +18,7 @@ import {
 } from "@mui/material";
 import TerminalIcon from "@mui/icons-material/Terminal";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditIcon from "@mui/icons-material/Edit";
 
 interface Node {
   id: number;
@@ -25,6 +27,7 @@ interface Node {
   internal_ip: string;
   public_ip: string;
   last_seen: string;
+  metadata: Record<string, string>;
 }
 
 interface Pagination {
@@ -40,13 +43,15 @@ interface NodeTableProps {
   onPaginationChange: (page: number, pageSize: number) => void;
   onSortChange: (sort: string, order: "asc" | "desc") => void;
   onRemove?: (mac: string) => void;
+  onEditMetadata?: (mac: string, metadata: Record<string, string>) => void;
 }
 
 function NodeCardList({
   nodes,
   loading,
   onRemove,
-}: Pick<NodeTableProps, "nodes" | "loading" | "onRemove">) {
+  onEditMetadata,
+}: Pick<NodeTableProps, "nodes" | "loading" | "onRemove" | "onEditMetadata">) {
   const router = useRouter();
 
   if (loading) {
@@ -83,8 +88,23 @@ function NodeCardList({
                       ? new Date(node.last_seen).toLocaleString()
                       : "Never"}
                   </Typography>
+                  {node.metadata && Object.keys(node.metadata).length > 0 && (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+                      {Object.entries(node.metadata).map(([k, v]) => (
+                        <Chip key={k} label={`${k}: ${v}`} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                  )}
                 </Box>
                 <Box sx={{ display: "flex", ml: 1 }}>
+                  <Tooltip title="Edit metadata">
+                    <IconButton
+                      size="small"
+                      onClick={() => onEditMetadata?.(node.mac_address, node.metadata || {})}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   <Tooltip title="SSH">
                     <IconButton
                       size="small"
@@ -122,6 +142,7 @@ export default function NodeTable({
   onPaginationChange,
   onSortChange,
   onRemove,
+  onEditMetadata,
 }: NodeTableProps) {
   const router = useRouter();
   const theme = useTheme();
@@ -131,7 +152,7 @@ export default function NodeTable({
   if (isMobile) {
     return (
       <Box sx={{ width: "100%" }}>
-        <NodeCardList nodes={nodes} loading={loading} onRemove={onRemove} />
+        <NodeCardList nodes={nodes} loading={loading} onRemove={onRemove} onEditMetadata={onEditMetadata} />
       </Box>
     );
   }
@@ -154,11 +175,19 @@ export default function NodeTable({
     {
       field: "actions",
       headerName: "",
-      width: 100,
+      width: 140,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
         <>
+          <Tooltip title="Edit metadata">
+            <IconButton
+              size="small"
+              onClick={() => onEditMetadata?.(params.row.mac_address, params.row.metadata || {})}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="SSH">
             <IconButton
               size="small"

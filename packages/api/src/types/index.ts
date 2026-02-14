@@ -5,6 +5,8 @@ export interface Node {
   internal_ip: string;
   public_ip: string;
   last_seen: Date;
+  metadata: Record<string, string>;
+  is_hidden: boolean;
   created_at: Date;
   updated_at: Date;
 }

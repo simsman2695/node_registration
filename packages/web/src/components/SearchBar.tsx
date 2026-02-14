@@ -26,7 +26,7 @@ export default function SearchBar({
     <TextField
       fullWidth
       size="small"
-      placeholder="Search by hostname, MAC, or IP..."
+      placeholder="Search by hostname, MAC, IP, or metadata..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
       slotProps={{

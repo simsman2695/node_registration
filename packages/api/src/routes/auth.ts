@@ -1,6 +1,7 @@
 import { Server, Request, Response, Next } from "restify";
 import { sessionMiddleware } from "../middleware/session";
 import { passport } from "../middleware/auth";
+import { logAudit } from "../audit";
 
 export function registerAuthRoutes(server: Server): void {
   // Apply session and passport middleware
@@ -32,6 +33,11 @@ export function registerAuthRoutes(server: Server): void {
           if (loginErr) {
             return next(loginErr);
           }
+          logAudit({
+            user_id: user.id,
+            user_email: user.email,
+            action: "login",
+          });
           res.redirect("/dashboard", next);
         });
       })(req, res, next);

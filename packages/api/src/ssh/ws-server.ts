@@ -6,6 +6,7 @@ import { unsign } from "cookie-signature";
 import redis from "../redis";
 import { config } from "../config";
 import db from "../db";
+import { logAudit } from "../audit";
 
 // Agent connections keyed by MAC address
 const agents = new Map<string, WebSocket>();
@@ -53,9 +54,10 @@ export function setupWebSocketServer(httpServer: http.Server): void {
         return;
       }
 
+      const userId = session.passport.user;
       browserWss.handleUpgrade(req, socket, head, (ws) => {
         browserWss.emit("connection", ws, req);
-        handleBrowserConnection(ws);
+        handleBrowserConnection(ws, userId);
       });
     } else if (req.url === "/ws/agent") {
       // Agent connection — auth happens after WS upgrade via first message
@@ -95,7 +97,7 @@ function getSessionId(cookieHeader: string | undefined): string | null {
 
 // ── Browser connection handler ──────────────────────────────────────────────
 
-function handleBrowserConnection(ws: WebSocket): void {
+function handleBrowserConnection(ws: WebSocket, userId: number): void {
   let sessionId: string | null = null;
 
   // Keep alive through Cloudflare's idle timeout
@@ -142,6 +144,21 @@ function handleBrowserConnection(ws: WebSocket): void {
           username: msg.username,
           privateKey,
         }));
+
+        // Audit log — look up user and node in parallel
+        Promise.all([
+          db("users").where({ id: userId }).first(),
+          db("nodes").where({ mac_address: msg.mac }).first(),
+        ]).then(([user, node]) => {
+          logAudit({
+            user_id: userId,
+            user_email: user?.email,
+            action: "ssh_connect",
+            target_mac: msg.mac,
+            target_hostname: node?.hostname,
+            meta: { ssh_username: msg.username },
+          });
+        });
         break;
       }
 

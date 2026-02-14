@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import TerminalToolbar from "./TerminalToolbar";
 
 interface TerminalViewProps {
   mac: string;
@@ -18,11 +19,20 @@ export default function TerminalView({ mac, username }: TerminalViewProps) {
   const fitRef = useRef<FitAddon | null>(null);
   const [status, setStatus] = useState<"connecting" | "connected" | "disconnected" | "error">("connecting");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  const sendInput = useCallback((data: string) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "input", data }));
+    }
+  }, []);
 
   useEffect(() => {
     if (!termRef.current) return;
 
-    const isMobile = window.innerWidth < 600;
+    const mobile = window.innerWidth < 600;
+    setIsMobile(mobile);
     const terminal = new Terminal({
       cursorBlink: true,
       theme: {
@@ -30,7 +40,7 @@ export default function TerminalView({ mac, username }: TerminalViewProps) {
         foreground: "#e0e0e0",
       },
       fontFamily: "'Fira Code', 'Cascadia Code', 'Menlo', monospace",
-      fontSize: isMobile ? 10 : 14,
+      fontSize: mobile ? 10 : 14,
     });
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
@@ -133,6 +143,7 @@ export default function TerminalView({ mac, username }: TerminalViewProps) {
           minHeight: { xs: 200, sm: 400 },
         }}
       />
+      {isMobile && <TerminalToolbar onSend={sendInput} />}
     </Box>
   );
 }

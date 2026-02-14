@@ -1,11 +1,12 @@
-const CACHE_NAME = "nodereg-v1";
+const CACHE_NAME = "nodereg-v1.1.0";
 const SHELL_ASSETS = ["/", "/dashboard"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)),
   );
-  self.skipWaiting();
+  // Do NOT call skipWaiting() here — let the page control activation
+  // so it can show an "Update available" prompt first.
 });
 
 self.addEventListener("activate", (event) => {
@@ -19,6 +20,12 @@ self.addEventListener("activate", (event) => {
     ),
   );
   self.clients.claim();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {

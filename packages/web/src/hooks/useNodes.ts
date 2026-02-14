@@ -10,6 +10,7 @@ interface Node {
   internal_ip: string;
   public_ip: string;
   last_seen: string;
+  metadata: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
