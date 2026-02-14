@@ -1,6 +1,10 @@
 packages:
   - packages/*
 
+onlyBuiltDependencies:
+  - cpu-features
+  - ssh2
+
 ignoredBuiltDependencies:
   - dtrace-provider
   - esbuild

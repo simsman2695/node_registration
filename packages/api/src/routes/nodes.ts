@@ -106,4 +106,18 @@ export function registerNodeRoutes(server: Server): void {
 
     res.send(200, node);
   });
+
+  // DELETE /api/nodes/:mac - Remove node (will reappear on next agent check-in)
+  server.del("/api/nodes/:mac", requireApiKey, async (req: Request, res: Response) => {
+    const mac = req.params.mac?.toUpperCase();
+    const deleted = await db("nodes").where({ mac_address: mac }).del();
+
+    if (!deleted) {
+      res.send(404, { error: "Node not found" });
+      return;
+    }
+
+    await invalidateCache();
+    res.send(204);
+  });
 }

@@ -26,6 +26,11 @@ async function main(): Promise<void> {
   // Run immediately, then on interval
   await run();
   setInterval(run, config.intervalMs);
+
+  // Start persistent WebSocket tunnel for SSH relay
+  import("./tunnel")
+    .then((m) => m.startTunnel())
+    .catch((err) => console.error("[tunnel] Failed to load:", err.message));
 }
 
 main();

@@ -22,6 +22,15 @@ export default function RootLayout({
           <CssBaseline />
           {children}
         </ThemeProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

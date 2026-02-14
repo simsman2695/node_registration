@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import NodeTable from "@/components/NodeTable";
 import SearchBar from "@/components/SearchBar";
 import { useNodes } from "@/hooks/useNodes";
+import { apiFetch } from "@/lib/api";
 
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
@@ -14,7 +15,7 @@ export default function DashboardPage() {
   const [sort, setSort] = useState("last_seen");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
 
-  const { nodes, pagination, isLoading } = useNodes({
+  const { nodes, pagination, isLoading, mutate } = useNodes({
     limit: pageSize,
     offset: page * pageSize,
     search,
@@ -43,6 +44,14 @@ export default function DashboardPage() {
     []
   );
 
+  const handleRemove = useCallback(
+    async (mac: string) => {
+      await apiFetch(`/api/nodes/${encodeURIComponent(mac)}`, { method: "DELETE" });
+      mutate();
+    },
+    [mutate]
+  );
+
   return (
     <Layout>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -54,6 +63,7 @@ export default function DashboardPage() {
           loading={isLoading}
           onPaginationChange={handlePaginationChange}
           onSortChange={handleSortChange}
+          onRemove={handleRemove}
         />
       </Box>
     </Layout>
