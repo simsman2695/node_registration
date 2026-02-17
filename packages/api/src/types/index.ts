@@ -4,6 +4,10 @@ export interface Node {
   hostname: string;
   internal_ip: string;
   public_ip: string;
+  os_info: string;
+  kernel: string;
+  build: string;
+  agent_version: string;
   last_seen: Date;
   metadata: Record<string, string>;
   is_hidden: boolean;

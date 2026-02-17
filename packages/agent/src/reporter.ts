@@ -6,6 +6,10 @@ interface ReportData {
   hostname: string;
   internal_ip: string;
   public_ip: string;
+  os_info: string;
+  kernel: string;
+  build: string;
+  agent_version: string;
 }
 
 export function reportNode(mac: string, data: ReportData): Promise<void> {

@@ -3,6 +3,7 @@ import { apiKeyAuth } from "./middleware/api-key";
 import { registerHealthRoutes } from "./routes/health";
 import { registerNodeRoutes } from "./routes/nodes";
 import { registerAuthRoutes } from "./routes/auth";
+import { registerAgentReleaseRoutes } from "./routes/agent-releases";
 
 export function createServer(): restify.Server {
   const server = restify.createServer({ name: "node-registration-api" });
@@ -26,6 +27,7 @@ export function createServer(): restify.Server {
   registerHealthRoutes(server);
   registerNodeRoutes(server);
   registerAuthRoutes(server);
+  registerAgentReleaseRoutes(server);
 
   // Error handler
   server.on("restifyError", (req, res, err, next) => {

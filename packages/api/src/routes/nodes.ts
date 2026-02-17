@@ -24,11 +24,18 @@ export function registerNodeRoutes(server: Server): void {
       return;
     }
 
-    const { hostname, internal_ip, public_ip } = req.body || {};
+    const { hostname, internal_ip, public_ip, os_info, kernel, build, agent_version } = req.body || {};
     if (!hostname || !internal_ip || !public_ip) {
       res.send(400, { error: "Missing required fields: hostname, internal_ip, public_ip" });
       return;
     }
+
+    const sysFields = {
+      os_info: os_info || "",
+      kernel: kernel || "",
+      build: build || "",
+      agent_version: agent_version || "",
+    };
 
     const now = new Date();
     const existing = await db("nodes").where({ mac_address: mac }).first();
@@ -36,13 +43,13 @@ export function registerNodeRoutes(server: Server): void {
     if (existing) {
       const [node] = await db("nodes")
         .where({ mac_address: mac })
-        .update({ hostname, internal_ip, public_ip, is_hidden: false, last_seen: now, updated_at: now })
+        .update({ hostname, internal_ip, public_ip, ...sysFields, is_hidden: false, last_seen: now, updated_at: now })
         .returning("*");
       await invalidateCache();
       res.send(200, node);
     } else {
       const [node] = await db("nodes")
-        .insert({ mac_address: mac, hostname, internal_ip, public_ip, last_seen: now })
+        .insert({ mac_address: mac, hostname, internal_ip, public_ip, ...sysFields, last_seen: now })
         .returning("*");
       await invalidateCache();
       res.send(201, node);
@@ -57,7 +64,7 @@ export function registerNodeRoutes(server: Server): void {
     const sort = req.query?.sort || "last_seen";
     const order = req.query?.order === "asc" ? "asc" : "desc";
 
-    const allowedSorts = ["hostname", "mac_address", "internal_ip", "public_ip", "last_seen", "created_at"];
+    const allowedSorts = ["hostname", "mac_address", "internal_ip", "public_ip", "os_info", "kernel", "agent_version", "last_seen", "created_at"];
     const sortCol = allowedSorts.includes(sort) ? sort : "last_seen";
 
     // Check cache

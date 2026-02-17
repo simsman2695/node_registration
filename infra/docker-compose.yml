@@ -44,8 +44,11 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
       DEFAULT_API_KEY: ${DEFAULT_API_KEY}
+      AGENT_RELEASES_DIR: /var/lib/cpedge/releases
     ports:
       - "3002:3002"
+    volumes:
+      - ../releases:/var/lib/cpedge/releases:ro
     depends_on:
       postgres:
         condition: service_healthy

@@ -20,4 +20,5 @@ export const config = {
   },
   defaultApiKey: process.env.DEFAULT_API_KEY || "changeme-default-api-key",
   sshKeyPath: process.env.SSH_KEY_PATH || path.join(os.homedir(), ".ssh", "id_rsa"),
+  agentReleasesDir: process.env.AGENT_RELEASES_DIR || path.resolve(__dirname, "../../../releases"),
 };

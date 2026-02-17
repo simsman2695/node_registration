@@ -9,6 +9,10 @@ interface Node {
   hostname: string;
   internal_ip: string;
   public_ip: string;
+  os_info: string;
+  kernel: string;
+  build: string;
+  agent_version: string;
   last_seen: string;
   metadata: Record<string, string>;
   created_at: string;

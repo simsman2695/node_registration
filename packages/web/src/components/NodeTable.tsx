@@ -26,6 +26,10 @@ interface Node {
   hostname: string;
   internal_ip: string;
   public_ip: string;
+  os_info: string;
+  kernel: string;
+  build: string;
+  agent_version: string;
   last_seen: string;
   metadata: Record<string, string>;
 }
@@ -88,6 +92,11 @@ function NodeCardList({
                       ? new Date(node.last_seen).toLocaleString()
                       : "Never"}
                   </Typography>
+                  {node.os_info && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {node.os_info}{node.agent_version ? ` · Agent v${node.agent_version}` : ""}
+                    </Typography>
+                  )}
                   {node.metadata && Object.keys(node.metadata).length > 0 && (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
                       {Object.entries(node.metadata).map(([k, v]) => (
@@ -162,6 +171,9 @@ export default function NodeTable({
     { field: "mac_address", headerName: "MAC Address", flex: 1, minWidth: 160 },
     { field: "internal_ip", headerName: "Internal IP", flex: 1, minWidth: 130 },
     { field: "public_ip", headerName: "Public IP", flex: 1, minWidth: 130 },
+    { field: "os_info", headerName: "OS", flex: 1, minWidth: 150 },
+    { field: "kernel", headerName: "Kernel", flex: 1, minWidth: 140 },
+    { field: "agent_version", headerName: "Agent", flex: 0.5, minWidth: 80 },
     {
       field: "last_seen",
       headerName: "Last Seen",
